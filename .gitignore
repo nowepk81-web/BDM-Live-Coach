@@ -1,0 +1,23 @@
+# Local secrets and Node.js dependencies
+server/.env
+server/node_modules/
+
+# Android/Gradle local state and build artefacts
+.gradle/
+local.properties
+**/build/
+*.apk
+*.aab
+
+# Editor and OS files
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Local compiler diagnostics and heap dumps
+.kotlin/
+*.hprof
+
+# May contain sensitive meeting transcripts; not needed to run the server
+agent-kit/BDM_REFERENCE_TRANSCRIPTS.md
