@@ -38,6 +38,10 @@ class LiveCoachService : Service() {
     }
 
     private fun onSpeech(text: String, isFinal: Boolean) {
+        // Show immediate feedback even before a final utterance is delivered.
+        // This makes microphone/recognizer failures distinguishable from an
+        // empty coaching result.
+        if (!isFinal) sendStatus("Słyszę: ${text.take(120)}", null)
         val now = System.currentTimeMillis()
         if (isFinal) history = (history + " " + text).takeLast(8_000)
         // Avoid a visually noisy stream of cards, but refresh at a useful pace.
