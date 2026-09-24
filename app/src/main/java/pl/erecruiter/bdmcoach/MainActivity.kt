@@ -12,6 +12,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -67,7 +69,7 @@ class CoachController(private val activity: ComponentActivity) {
             .putExtra(LiveCoachService.EXTRA_BACKEND_URL, backendUrl.trim())
             .putExtra(LiveCoachService.EXTRA_SESSION_TOKEN, sessionToken.trim()))
     }
-    fun accept(newState: CoachState) { state = newState; if (newState.status == "Wstrzymano nasłuch") { running = false; error = newState.quote } }
+    fun accept(newState: CoachState) { state = newState; if (newState.status == "Zatrzymano") running = false }
     fun stop() { running = false; activity.startService(Intent(activity, LiveCoachService::class.java).setAction(LiveCoachService.ACTION_STOP)) }
     fun showError(message: String) { error = message; running = false }
 }
@@ -77,7 +79,8 @@ private fun CoachApp(coach: CoachController, onStart: () -> Unit) {
     val navy = Color(0xFF0D1117); val surface = Color(0xFF161B22); val blue = Color(0xFF6EA8FE)
     MaterialTheme(colorScheme = darkColorScheme(primary = blue, surface = surface, background = navy)) {
         Surface(Modifier.fillMaxSize(), color = navy) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(Modifier.safeDrawingPadding().imePadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text("Wersja ${BuildConfig.VERSION_NAME}", color = blue)
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.weight(1f)) { Text("BDM LIVE COACH", fontWeight = FontWeight.Bold); Text(if (coach.running) "● Słucham — bez zapisu audio" else "Gotowy do spotkania", color = if (coach.running) Color(0xFF6EE7B7) else Color.LightGray, style = MaterialTheme.typography.bodySmall) }
                     Button(onClick = { if (coach.running) coach.stop() else onStart() }, colors = ButtonDefaults.buttonColors(containerColor = if (coach.running) Color(0xFFB42318) else Color(0xFF16A34A))) { Text(if (coach.running) "Zatrzymaj" else "Rozpocznij") }
@@ -87,7 +90,7 @@ private fun CoachApp(coach: CoachController, onStart: () -> Unit) {
                 Text(coach.state.status, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 coach.state.quote?.let { Quote(it) }
                 coach.state.cards.forEach { Card(it) }
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.height(14.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = coach.consent, onCheckedChange = { coach.consent = it })
                     Text("Mam zgodę na użycie transkrypcji w tym spotkaniu.", style = MaterialTheme.typography.bodySmall, color = Color.LightGray)

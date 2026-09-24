@@ -15,7 +15,10 @@ class SpeechController(private val context: Context, private val onText: (String
     private val handler = Handler(Looper.getMainLooper())
     fun start() {
         if (!SpeechRecognizer.isRecognitionAvailable(context)) { onError("Rozpoznawanie mowy nie jest dostępne na tym urządzeniu."); return }
-        active = true; recognizer = SpeechRecognizer.createSpeechRecognizer(context).also { it.setRecognitionListener(listener); listen() }
+        stop()
+        active = true
+        recognizer = SpeechRecognizer.createSpeechRecognizer(context).also { it.setRecognitionListener(listener) }
+        listen()
     }
     private fun listen() {
         if (!active) return
@@ -29,7 +32,7 @@ class SpeechController(private val context: Context, private val onText: (String
         override fun onResults(b: Bundle?) { b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { onText(it, true) }; listen() }
         override fun onError(error: Int) {
             if (!active) return
-            onError(errorMessage(error))
+            this@SpeechController.onError("${errorMessage(error)} (kod $error)")
             // Recognition services commonly return a transient timeout after a pause.
             // Restart after a short delay, while exposing the actual failure to the UI.
             handler.postDelayed({ if (active) listen() }, 700L)

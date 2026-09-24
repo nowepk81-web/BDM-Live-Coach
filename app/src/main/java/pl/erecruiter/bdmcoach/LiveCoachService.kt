@@ -31,7 +31,10 @@ class LiveCoachService : Service() {
     private fun startLiveCoach(backendUrl: String, sessionToken: String) {
         createChannel()
         startForeground(NOTIFICATION_ID, notification())
-        if (speech != null) return
+        speech?.stop()
+        backend?.close()
+        history = ""
+        lastAnalysisAt = 0L
         backend = backendUrl.takeIf { it.startsWith("https://") }?.let { CoachBackend(it, sessionToken) }
         sendStatus("Nasłuchuję spotkania", null)
         speech = SpeechController(this, ::onSpeech, ::onError).also { it.start() }
@@ -48,22 +51,24 @@ class LiveCoachService : Service() {
         if (isFinal || now - lastAnalysisAt >= 2_500) {
             lastAnalysisAt = now
             val context = if (isFinal) history else "$history $text"
-            publish(engine.analyse(context)) // immediate local fallback
-            if (isFinal) backend?.analyse(context, ::publish)
+            publish(engine.analyse(context).copy(quote = text.take(280))) // immediate local fallback
+            if (isFinal) backend?.analyse(context, ::publish) { message -> sendStatus("Błąd połączenia AI", message) }
         }
     }
 
-    private fun onError(message: String) { sendStatus("Wstrzymano nasłuch", message) }
+    private fun onError(message: String) { sendStatus("Problem rozpoznawania mowy", message) }
     private fun publish(state: CoachState) = sendBroadcast(Intent(ACTION_UPDATE).setPackage(packageName).putExtra(EXTRA_STATE, state))
     private fun sendStatus(status: String, detail: String?) = publish(CoachState(status, detail, emptyList()))
 
     private fun stopLiveCoach() {
         speech?.stop(); speech = null
+        backend?.close(); backend = null
+        sendStatus("Zatrzymano", null)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
-    override fun onDestroy() { speech?.stop(); speech = null; super.onDestroy() }
+    override fun onDestroy() { speech?.stop(); speech = null; backend?.close(); backend = null; super.onDestroy() }
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createChannel() {
