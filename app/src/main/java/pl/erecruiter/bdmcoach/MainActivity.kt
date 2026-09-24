@@ -56,8 +56,8 @@ class MainActivity : ComponentActivity() {
 class CoachController(private val activity: ComponentActivity) {
     var running by mutableStateOf(false); private set
     var consent by mutableStateOf(false)
-    var backendUrl by mutableStateOf("")
-    var sessionToken by mutableStateOf("")
+    var backendUrl by mutableStateOf("https://bdm-live-coach.onrender.com")
+    var sessionToken by mutableStateOf("12344321")
     var state by mutableStateOf(CoachEngine().analyse("")); private set
     var error by mutableStateOf<String?>(null); private set
     fun start() {
@@ -80,7 +80,7 @@ private fun CoachApp(coach: CoachController, onStart: () -> Unit) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.weight(1f)) { Text("BDM LIVE COACH", fontWeight = FontWeight.Bold); Text(if (coach.running) "● Słucham — bez zapisu audio" else "Gotowy do spotkania", color = if (coach.running) Color(0xFF6EE7B7) else Color.LightGray, style = MaterialTheme.typography.bodySmall) }
-                    Button(onClick = { if (coach.running) coach.stop() else onStart() }, colors = ButtonDefaults.buttonColors(containerColor = if (coach.running) Color(0xFFB42318) else blue)) { Text(if (coach.running) "Zatrzymaj" else "Rozpocznij") }
+                    Button(onClick = { if (coach.running) coach.stop() else onStart() }, colors = ButtonDefaults.buttonColors(containerColor = if (coach.running) Color(0xFFB42318) else Color(0xFF16A34A))) { Text(if (coach.running) "Zatrzymaj" else "Rozpocznij") }
                 }
                 HorizontalDivider(color = Color(0xFF30363D))
                 Text("STATUS", color = blue, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
